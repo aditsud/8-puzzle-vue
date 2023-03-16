@@ -6,7 +6,7 @@ Aditya Sudyana (23222063) LTI
 
 ## Tools
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+Proyek ini dikerjakan menggunakan bahasa pemrograman Javascript dengan tambahan VueJS sebagai framework untuk membangun web yang reaktif
 
 ## Customize configuration
 
