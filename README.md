@@ -1,8 +1,10 @@
 # 8-puzzle-solver
 
-This template should help get you started developing with Vue 3 in Vite.
+Ini adalah proyek untuk tugas UTS dari mata kuliah Sistem Intelejen yang dikerjakan oleh:
 
-## Recommended IDE Setup
+Aditya Sudyana (23222063) LTI
+
+## Tools
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
 
