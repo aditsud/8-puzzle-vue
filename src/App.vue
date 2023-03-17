@@ -21,9 +21,22 @@
       </v-list>
 
       <v-divider></v-divider>
-      
+
       <v-card 
         class="ma-2 rounded"
+      >
+        <v-card-title class="bg-light-blue-darken-4">
+          Status
+        </v-card-title>
+
+        <v-card-text class="bg-light-blue-lighten-5 pt-5">
+          {{ status }}
+        </v-card-text>
+
+      </v-card>
+      
+      <v-card 
+        class="ma-2 mt-5 rounded"
       >
         <v-card-title class="bg-light-blue-darken-4">
           Playground
@@ -35,6 +48,7 @@
             variant="tonal"
             prepend-icon="mdi-shuffle"
             @click="shuffle"
+            :disabled="loading"
           >
             Shuffle
           </v-btn>
@@ -44,8 +58,19 @@
             prepend-icon="mdi-refresh"
             class="mt-2"
             @click="reset"
+            :disabled="loading"
           >
             Reset
+          </v-btn>
+          <v-btn
+            block
+            variant="tonal"
+            prepend-icon="mdi-fire"
+            class="mt-2 bg-red-darken-3"
+            @click="solve"
+            :disabled="loading"
+          >
+            Solve!
           </v-btn>
         </v-card-text>
 
@@ -68,12 +93,25 @@ import background from './assets/background.jpeg'
 
 const drawer = ref(true)
 const emitter = inject('emitter')
+const loading = ref(false)
+const status = ref('Ready')
+
 const reset = () => {
   emitter.emit('reset')
 }
 const shuffle = () => {
+  status.value = 'Shuffling ...'
   emitter.emit('shuffle')
 }
+const solve = () => {
+  emitter.emit('solve')
+}
+emitter.on('setLoading', (val)=>{
+  loading.value = val
+})
+emitter.on('setStatus', (val)=>{
+  status.value = val
+})
 </script>
 
 <style>

@@ -10,16 +10,30 @@
     <div :class="checkClass(2,1)" id="block21" @click="moveBlock(2,1)">{{ getValue(2,1) }}</div>
     <div :class="checkClass(2,2)" id="block22" @click="moveBlock(2,2)">{{ getValue(2,2) }}</div>
   </div>
+  <div class="mt-5 text-center" v-if="iteration > 0">
+    <v-chip class="bg-blue-darken-4">
+      Jumlah Iterasi: {{  iteration }}
+    </v-chip>
+  </div>
 </template>
 
 <script setup>
 import { ref, inject } from 'vue';
-import { reset, shuffle } from './assets/algoritma';
+import { solve, emptyBlockIndex } from './assets/algoritma';
 
 const emitter = inject('emitter')
 
+const iteration = ref(0)
+
 // representasi block dalam array 2 dimensi
 const blocks = ref([
+  [1,2,3],
+  [4,5,6],
+  [7,8,0]
+])
+
+// representasi block yang diinginkan dalam array 2 dimensi
+const blocks_goal = ref([
   [1,2,3],
   [4,5,6],
   [7,8,0]
@@ -37,97 +51,93 @@ const checkClass = (x,y) => {
   return  value === 0 ? 'empty' : 'block'
 }
 
-// fungsi untuk mencari index x dan y pada block kosong
-const emptyBlockIndex = () => {
-  // mengambil lokasi x,y dari blok kosong
-  let x0 = null;
-  let y0 = null;
-  for(let i=0; i<blocks.value.length; i++)
-    for(let j=0; j<blocks.value[i].length; j++)
-      if(blocks.value[i][j]===0){
-        x0 = i;
-        y0 = j;
-        break;
-      }
-  return { x0, y0 }
-}
-
 const loading = ref(false); // untuk indikator yang menyatakan bahwa block sedang digerakkan
+const setLoading = (val) => {
+  loading.value = val;
+  emitter.emit('setLoading', val)
+}
 
 // fungsi untuk menggerakkan block jika diklik
 const moveBlock = (x,y, withAnimation=true) => {
-  let value = blocks.value[x][y];
+  return new Promise((resolve) => {
+    let value = blocks.value[x][y];
 
-  // jika yang diklik adalah blok kosong, maka tidak terjadi apa-apa
-  if(value===0) return;
+    // jika yang diklik adalah blok kosong, maka tidak terjadi apa-apa
+    if(value===0){
+      resolve();
+      return;
+    }
 
-  // mengambil lokasi x,y dari blok kosong
-  let {x0, y0} = emptyBlockIndex()
+    // mengambil lokasi x,y dari blok kosong
+    let {x0, y0} = emptyBlockIndex(blocks)
 
-  // memeriksa apakah block kosong bertetanggaan dengan block yang dipilih
-  let tetangga = '';
-  if(x0-1===x && y0===y) tetangga = 'down'; // artinya block kosong berada tepat di bawah block yang dipilih
-  else if(x0+1===x && y0===y) tetangga = 'up'; // artinya block kosong berada tepat di atas block yang dipilih
-  else if(x0===x && y0-1===y) tetangga = 'right'; // artinya block kosong berada tepat di kanan block yang dipilih
-  else if(x0===x && y0+1===y) tetangga = 'left'; // artinya block kosong berada tepat di kiri block yang dipilih
+    // memeriksa apakah block kosong bertetanggaan dengan block yang dipilih
+    let tetangga = '';
+    if(x0-1===x && y0===y) tetangga = 'down'; // artinya block kosong berada tepat di bawah block yang dipilih
+    else if(x0+1===x && y0===y) tetangga = 'up'; // artinya block kosong berada tepat di atas block yang dipilih
+    else if(x0===x && y0-1===y) tetangga = 'right'; // artinya block kosong berada tepat di kanan block yang dipilih
+    else if(x0===x && y0+1===y) tetangga = 'left'; // artinya block kosong berada tepat di kiri block yang dipilih
 
-  // jika block dipilih bukan tetangga block kosong, maka tidak terjadi apa-apa
-  if(tetangga==='') return; 
-  
-  
-  if(withAnimation === true){ // jika menggunakan animasi
-    // memberi animasi perpindahan block dipilih menuju block kosong
-    let elementBlockDipilih = document.getElementById(`block${x}${y}`)
-    elementBlockDipilih.classList.add(`move-${tetangga}`);
+    // jika block dipilih bukan tetangga block kosong, maka tidak terjadi apa-apa
+    if(tetangga===''){
+      resolve();
+      return; 
+    }
 
-    loading.value = true;
-    setTimeout(() => {
-      elementBlockDipilih.classList.remove('moving', 'move-left', 'move-right', 'move-up', 'move-down');
+
+    if(withAnimation === true){ // jika menggunakan animasi
+      // memberi animasi perpindahan block dipilih menuju block kosong
+      let elementBlockDipilih = document.getElementById(`block${x}${y}`)
+      elementBlockDipilih.classList.add(`move-${tetangga}`);
+
+      setTimeout(() => {
+        elementBlockDipilih.classList.remove('moving', 'move-left', 'move-right', 'move-up', 'move-down');
+        // menaruh angka yang ada pada indeks x,y ke dalam indeks x0, y0
+        blocks.value[x0][y0] = value;
+        // menaruh block kosong pada indeks x,y
+        blocks.value[x][y] = 0;
+        resolve()
+      }, 100);
+    }else{
       // menaruh angka yang ada pada indeks x,y ke dalam indeks x0, y0
       blocks.value[x0][y0] = value;
       // menaruh block kosong pada indeks x,y
       blocks.value[x][y] = 0;
-      loading.value = false;
-    }, 100);
-  }else{
-    // menaruh angka yang ada pada indeks x,y ke dalam indeks x0, y0
-    blocks.value[x0][y0] = value;
-    // menaruh block kosong pada indeks x,y
-    blocks.value[x][y] = 0;
-  }
-  
-
-  
+      resolve()
+    }
+  })
+    
 }
 
 // untuk capture arrow key supaya lebih mudah menggerakkan block
-document.onkeydown = (e) => {
+document.onkeydown = async (e) => {
   e = e || window.event;
-  if(e.keyCode < 37 || e.keyCode > 40 || loading.value) return;
+  if(e.keyCode < 37 || e.keyCode > 40 ) return;
 
   // mengambil lokasi x,y dari blok kosong
-  let {x0, y0} = emptyBlockIndex()
+  let {x0, y0} = emptyBlockIndex(blocks)
 
   if (e.keyCode === 38) { // tombol atas dipencet
     // cek apakah ada block di bawah block kosong yang bisa diangkat ke atas
     if(x0 + 1 > blocks.value.length - 1 || x0 + 1 < 0) return;
-    moveBlock(x0 + 1, y0)
+    await moveBlock(x0 + 1, y0)
   } else if (e.keyCode === 40) { // tombol bawah dipencet
     // cek apakah ada block di atas block kosong yang bisa turunin ke bawah
     if(x0 - 1 > blocks.value.length - 1 || x0 - 1< 0) return;
-    moveBlock(x0 - 1, y0)
+    await moveBlock(x0 - 1, y0)
   } else if (e.keyCode === 37) { // tombol kiri dipencet
     // cek apakah ada block di kanan block kosong yang bisa dipindah ke kiri
     if(y0 + 1 > blocks.value[x0].length - 1 || y0 + 1 < 0) return;
-    moveBlock(x0 , y0 + 1)
+    await moveBlock(x0 , y0 + 1)
   } else if (e.keyCode === 39) { // tombol kanan dipencet
     // cek apakah ada block di kiri block kosong yang bisa dipindah ke kanan
     if(y0 - 1 > blocks.value[x0].length - 1 || y0 - 1 < 0) return;
-    moveBlock(x0 , y0 - 1)
+    await moveBlock(x0 , y0 - 1)
   }
 }
 
 emitter.on('reset', () => {
+  iteration.value = 0;
   blocks.value = [
     [1,2,3],
     [4,5,6],
@@ -135,7 +145,9 @@ emitter.on('reset', () => {
   ]
 })
 
-emitter.on('shuffle', () => {
+emitter.on('shuffle', async () => {
+  setLoading(true)
+  iteration.value = 0;
   for(let i=0; i<100; i++){ // jumlah iterasi untuk mengacak
 
     // memilih arah untuk memindahkan block kosong
@@ -144,26 +156,33 @@ emitter.on('shuffle', () => {
     let choosenMove = availableMove[randomBetween0and3];
 
     // mengambil lokasi x,y dari blok kosong
-    let {x0, y0} = emptyBlockIndex()
+    let {x0, y0} = emptyBlockIndex(blocks)
 
     if (choosenMove === 'up') { 
       // cek apakah ada block di bawah block kosong yang bisa diangkat ke atas
       if(!(x0 + 1 > blocks.value.length - 1 || x0 + 1 < 0))
-        moveBlock(x0 + 1, y0, false)
+        await moveBlock(x0 + 1, y0)
     } else if (choosenMove === 'down') { 
       // cek apakah ada block di atas block kosong yang bisa turunin ke bawah
       if(!(x0 - 1 > blocks.value.length - 1 || x0 - 1< 0))
-        moveBlock(x0 - 1, y0, false)
+        await moveBlock(x0 - 1, y0)
     } else if (choosenMove === 'left') { 
       // cek apakah ada block di kanan block kosong yang bisa dipindah ke kiri
       if(!(y0 + 1 > blocks.value[x0].length - 1 || y0 + 1 < 0))
-        moveBlock(x0 , y0 + 1, false)
+        await moveBlock(x0 , y0 + 1)
     } else if (choosenMove === 'right') {
       // cek apakah ada block di kiri block kosong yang bisa dipindah ke kanan
       if(!(y0 - 1 > blocks.value[x0].length - 1 || y0 - 1 < 0))
-        moveBlock(x0 , y0 - 1, false)
+        await moveBlock(x0 , y0 - 1)
     }
+    iteration.value++;
   }
+  setLoading(false)
+  emitter.emit('setStatus', 'Ready')
+})
+
+emitter.on('solve', ()=>{
+  solve(blocks, blocks_goal, true)
 })
 
 </script>
