@@ -20,4 +20,8 @@ const vuetify = createVuetify({
   },
 })
 
-createApp(App).use(vuetify).mount('#app')
+// emitter
+import mitt from 'mitt'
+const emitter = mitt();
+
+createApp(App).use(vuetify).provide('emitter', emitter).mount('#app')

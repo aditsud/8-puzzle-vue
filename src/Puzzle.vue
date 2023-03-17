@@ -1,5 +1,5 @@
 <template>
-  <div class="puzzle mx-auto text-center row">
+  <div class="puzzle mx-auto text-center row text-blue-darken-4">
     <div :class="checkClass(0,0)" id="block00" @click="moveBlock(0,0)">{{ getValue(0,0) }}</div>
     <div :class="checkClass(0,1)" id="block01" @click="moveBlock(0,1)">{{ getValue(0,1) }}</div>
     <div :class="checkClass(0,2)" id="block02" @click="moveBlock(0,2)">{{ getValue(0,2) }}</div>
@@ -13,7 +13,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, inject } from 'vue';
+import { reset, shuffle } from './assets/algoritma';
+
+const emitter = inject('emitter')
 
 // representasi block dalam array 2 dimensi
 const blocks = ref([
@@ -52,7 +55,7 @@ const emptyBlockIndex = () => {
 const loading = ref(false); // untuk indikator yang menyatakan bahwa block sedang digerakkan
 
 // fungsi untuk menggerakkan block jika diklik
-const moveBlock = (x,y) => {
+const moveBlock = (x,y, withAnimation=true) => {
   let value = blocks.value[x][y];
 
   // jika yang diklik adalah blok kosong, maka tidak terjadi apa-apa
@@ -70,20 +73,29 @@ const moveBlock = (x,y) => {
 
   // jika block dipilih bukan tetangga block kosong, maka tidak terjadi apa-apa
   if(tetangga==='') return; 
-
-  // memberi animasi perpindahan block dipilih menuju block kosong
-  let elementBlockDipilih = document.getElementById(`block${x}${y}`)
-  elementBlockDipilih.classList.add(`move-${tetangga}`);
   
-  loading.value = true;
-  setTimeout(() => {
-    elementBlockDipilih.classList.remove('moving', 'move-left', 'move-right', 'move-up', 'move-down');
+  
+  if(withAnimation === true){ // jika menggunakan animasi
+    // memberi animasi perpindahan block dipilih menuju block kosong
+    let elementBlockDipilih = document.getElementById(`block${x}${y}`)
+    elementBlockDipilih.classList.add(`move-${tetangga}`);
+
+    loading.value = true;
+    setTimeout(() => {
+      elementBlockDipilih.classList.remove('moving', 'move-left', 'move-right', 'move-up', 'move-down');
       // menaruh angka yang ada pada indeks x,y ke dalam indeks x0, y0
       blocks.value[x0][y0] = value;
       // menaruh block kosong pada indeks x,y
       blocks.value[x][y] = 0;
       loading.value = false;
-  }, 100);
+    }, 100);
+  }else{
+    // menaruh angka yang ada pada indeks x,y ke dalam indeks x0, y0
+    blocks.value[x0][y0] = value;
+    // menaruh block kosong pada indeks x,y
+    blocks.value[x][y] = 0;
+  }
+  
 
   
 }
@@ -115,6 +127,45 @@ document.onkeydown = (e) => {
   }
 }
 
+emitter.on('reset', () => {
+  blocks.value = [
+    [1,2,3],
+    [4,5,6],
+    [7,8,0]
+  ]
+})
+
+emitter.on('shuffle', () => {
+  for(let i=0; i<100; i++){ // jumlah iterasi untuk mengacak
+
+    // memilih arah untuk memindahkan block kosong
+    let randomBetween0and3 = Math.floor(Math.random() * (3 - 0 + 1) + 0);
+    let availableMove = ['up', 'down', 'left', 'right']
+    let choosenMove = availableMove[randomBetween0and3];
+
+    // mengambil lokasi x,y dari blok kosong
+    let {x0, y0} = emptyBlockIndex()
+
+    if (choosenMove === 'up') { 
+      // cek apakah ada block di bawah block kosong yang bisa diangkat ke atas
+      if(!(x0 + 1 > blocks.value.length - 1 || x0 + 1 < 0))
+        moveBlock(x0 + 1, y0, false)
+    } else if (choosenMove === 'down') { 
+      // cek apakah ada block di atas block kosong yang bisa turunin ke bawah
+      if(!(x0 - 1 > blocks.value.length - 1 || x0 - 1< 0))
+        moveBlock(x0 - 1, y0, false)
+    } else if (choosenMove === 'left') { 
+      // cek apakah ada block di kanan block kosong yang bisa dipindah ke kiri
+      if(!(y0 + 1 > blocks.value[x0].length - 1 || y0 + 1 < 0))
+        moveBlock(x0 , y0 + 1, false)
+    } else if (choosenMove === 'right') {
+      // cek apakah ada block di kiri block kosong yang bisa dipindah ke kanan
+      if(!(y0 - 1 > blocks.value[x0].length - 1 || y0 - 1 < 0))
+        moveBlock(x0 , y0 - 1, false)
+    }
+  }
+})
+
 </script>
 
 <style>
@@ -126,7 +177,7 @@ document.onkeydown = (e) => {
   height: 300px;
   margin: auto;
   margin-top: 100px;
-  border: 1px solid black;
+  border: 1px solid #00579B;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   background-color: #f2f2f2;
   padding-left: 1px;
@@ -145,7 +196,7 @@ document.onkeydown = (e) => {
   user-select: none;
   background-color: #ffffff;
   width: calc((100%) - 1px);
-  border: 1px solid grey;
+  border: 1px solid #00579B;
 }
 
 .empty {

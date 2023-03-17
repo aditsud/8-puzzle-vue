@@ -8,10 +8,6 @@ Aditya Sudyana (23222063) LTI
 
 Proyek ini dikerjakan menggunakan bahasa pemrograman Javascript dengan tambahan VueJS sebagai framework untuk membangun web yang reaktif
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
 ## Project Setup
 
 ```sh
