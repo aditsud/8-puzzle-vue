@@ -76,6 +76,23 @@
 
       </v-card>
 
+      <v-card 
+        class="ma-2 mt-5 rounded"
+      >
+        <v-card-title class="bg-light-blue-darken-4">
+          Documentation
+        </v-card-title>
+
+        <v-card-text class="bg-light-blue-lighten-5 ma-0 pa-2">
+          <v-list density="compact" class="pa-0" nav>
+            <v-list-item prepend-icon="mdi-github" title="Source Code" href="https://github.com/aditsud/8-puzzle-vue" target="_blank"></v-list-item>
+            <v-list-item prepend-icon="mdi-microsoft-powerpoint" title="Slide Presentation" href="https://eight-puzzle-solver.web.app/slide_presentasi.pdf" target="_blank"></v-list-item>
+            <v-list-item prepend-icon="mdi-web" title="Demo Application" href="https://eight-puzzle-solver.web.app/" target="_blank"></v-list-item>
+          </v-list>
+        </v-card-text>
+
+      </v-card>
+
     </v-navigation-drawer>
 
     <v-main class="pattern" :style="`background-image: url(${pattern});`">
@@ -98,6 +115,7 @@ const status = ref('Ready')
 
 const reset = () => {
   emitter.emit('reset')
+  status.value = 'Ready'
 }
 const shuffle = () => {
   status.value = 'Shuffling ...'

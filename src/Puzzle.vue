@@ -146,43 +146,75 @@ emitter.on('reset', () => {
 })
 
 emitter.on('shuffle', async () => {
-  setLoading(true)
   iteration.value = 0;
+  setLoading(true)
+  let x_before = null;
+  let y_before = null;
   for(let i=0; i<100; i++){ // jumlah iterasi untuk mengacak
 
-    // memilih arah untuk memindahkan block kosong
-    let randomBetween0and3 = Math.floor(Math.random() * (3 - 0 + 1) + 0);
-    let availableMove = ['up', 'down', 'left', 'right']
-    let choosenMove = availableMove[randomBetween0and3];
+     // mengambil lokasi x,y dari blok kosong
+     let {x0, y0} = emptyBlockIndex(blocks)
 
-    // mengambil lokasi x,y dari blok kosong
-    let {x0, y0} = emptyBlockIndex(blocks)
+    let possibilityMoves = [];
+
+    if(x0 + 1 <= blocks.value.length - 1) // apakah block kosong bisa pindah ke bawah? (dan memastikan tidak kembali ke block sebelumnya)
+      if(x_before === null || (x_before !== null && x_before !== x0 + 1 && y_before !== y0))
+        possibilityMoves.push('up')
+
+    if(x0 - 1 >= 0) // apakah block kosong bisa pindah ke atas?
+      if(x_before === null || (x_before !== null && x_before !== x0 - 1 && y_before !== y0))
+        possibilityMoves.push('down')
+
+    if(y0 + 1 <= blocks.value[x0].length - 1) // apakah block kosong bisa pindah ke kanan?
+      if(x_before === null || (x_before !== null && x_before !== x0 && y_before !== y0 + 1))
+        possibilityMoves.push('left')
+
+    if(y0 - 1 >= 0) // apakah block kosong bisa pindah ke left?
+      if(x_before === null || (x_before !== null && x_before !== x0 && y_before !== y0 - 1))
+        possibilityMoves.push('right')
+
+    // memilih arah untuk memindahkan block kosong
+    let random = Math.floor(Math.random() * ((possibilityMoves.length - 1) - 0 + 1) + 0);
+    let choosenMove = possibilityMoves[random];
 
     if (choosenMove === 'up') { 
-      // cek apakah ada block di bawah block kosong yang bisa diangkat ke atas
-      if(!(x0 + 1 > blocks.value.length - 1 || x0 + 1 < 0))
+      if(x0 + 1 <= blocks.value.length - 1){
         await moveBlock(x0 + 1, y0)
+      }
+          
     } else if (choosenMove === 'down') { 
-      // cek apakah ada block di atas block kosong yang bisa turunin ke bawah
-      if(!(x0 - 1 > blocks.value.length - 1 || x0 - 1< 0))
+      if(x0 - 1 >= 0){
         await moveBlock(x0 - 1, y0)
+      }
+        
     } else if (choosenMove === 'left') { 
-      // cek apakah ada block di kanan block kosong yang bisa dipindah ke kiri
-      if(!(y0 + 1 > blocks.value[x0].length - 1 || y0 + 1 < 0))
+      if(y0 + 1 <= blocks.value[x0].length - 1){
         await moveBlock(x0 , y0 + 1)
+      }
+        
     } else if (choosenMove === 'right') {
-      // cek apakah ada block di kiri block kosong yang bisa dipindah ke kanan
-      if(!(y0 - 1 > blocks.value[x0].length - 1 || y0 - 1 < 0))
+      if(y0 - 1 >= 0){
         await moveBlock(x0 , y0 - 1)
+      }
+        
     }
-    iteration.value++;
+    x_before = x0;
+    y_before = y0;
+
   }
   setLoading(false)
-  emitter.emit('setStatus', 'Ready')
+  emitter.emit('setStatus', 'Shuffled')
 })
 
-emitter.on('solve', ()=>{
-  solve(blocks, blocks_goal, true)
+emitter.on('solve', async ()=>{
+  if(JSON.stringify(blocks.value) === JSON.stringify(blocks_goal.value)) return;
+
+  emitter.emit('setStatus', 'In Progress ...');
+  setLoading(true)
+  iteration.value = 0;
+  await solve(blocks, blocks_goal, true, iteration)
+  setLoading(false)
+  emitter.emit('setStatus', 'Solved! Congratulation!')
 })
 
 </script>

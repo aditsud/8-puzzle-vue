@@ -8,6 +8,14 @@ Aditya Sudyana (23222063) LTI
 
 Proyek ini dikerjakan menggunakan bahasa pemrograman Javascript dengan tambahan VueJS sebagai framework untuk membangun web yang reaktif
 
+## Slide Presentation
+
+Slide dapat diunduh pada https://github.com/aditsud/8-puzzle-vue/raw/main/public/slide_presentasi.pdf
+
+## Demo Application (Online)
+
+Aplikasi dapat diakses pada https://eight-puzzle-solver.web.app/
+
 ## Project Setup
 
 ```sh

@@ -1,4 +1,4 @@
-export const solve = async (matriks, matriks_tujuan, withAnimation, gN = 0, lastNode = null) => { // menggunakan A*
+export const solve = async (matriks, matriks_tujuan, withAnimation, iteration, gN = 0, lastNode = null) => { // menggunakan A*
   
   // cek, jika matriks awal sudah sama dengan matriks tujuan, maka berhenti
   if(JSON.stringify(matriks.value) === JSON.stringify(matriks_tujuan.value)){
@@ -24,11 +24,10 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, gN = 0, last
       temp_matriks[x0 + 1][y0] = 0; // menaruh block kosong pada indeks x,y
       
       // menghitung nilai h(n) atau jumlah block yang kosong pada saat block kosong dipindah ke bawah
-      let hN = counttMissPlacedBlock(temp_matriks, matriks_tujuan);
+      let hN = manhattanDistance(temp_matriks, matriks_tujuan);
       let fN = hN + gN;
       possibility_fN.push({
         direction: possibilityMoves[i],
-        ruleDirection: getRuleNumberOfDirection(possibilityMoves[i]),
         fN: fN,
         hN: hN,
         next_x: x0 + 1,
@@ -40,11 +39,10 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, gN = 0, last
       temp_matriks[x0][y0] = value;
       temp_matriks[x0 - 1][y0] = 0; 
       
-      let hN = counttMissPlacedBlock(temp_matriks, matriks_tujuan);
+      let hN = manhattanDistance(temp_matriks, matriks_tujuan);
       let fN = hN + gN;
       possibility_fN.push({
         direction: possibilityMoves[i],
-        ruleDirection: getRuleNumberOfDirection(possibilityMoves[i]),
         fN: fN,
         hN: hN,
         next_x: x0 - 1,
@@ -56,11 +54,10 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, gN = 0, last
       temp_matriks[x0][y0] = value;
       temp_matriks[x0][y0 + 1] = 0; 
       
-      let hN = counttMissPlacedBlock(temp_matriks, matriks_tujuan);
+      let hN = manhattanDistance(temp_matriks, matriks_tujuan);
       let fN = hN + gN;
       possibility_fN.push({
         direction: possibilityMoves[i],
-        ruleDirection: getRuleNumberOfDirection(possibilityMoves[i]),
         fN: fN,
         hN: hN,
         next_x: x0,
@@ -72,11 +69,10 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, gN = 0, last
       temp_matriks[x0][y0] = value;
       temp_matriks[x0][y0 - 1] = 0; 
       
-      let hN = counttMissPlacedBlock(temp_matriks, matriks_tujuan);
+      let hN = manhattanDistance(temp_matriks, matriks_tujuan);
       let fN = hN + gN;
       possibility_fN.push({
         direction: possibilityMoves[i],
-        ruleDirection: getRuleNumberOfDirection(possibilityMoves[i]),
         fN: fN,
         hN: hN,
         next_x: x0,
@@ -88,14 +84,36 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, gN = 0, last
   // tentukan arah mana yang memiliki nilai fN terkecil
   // sort possibility_fN berdasarkan fN terkecil, hN terkecil, dan rule arah yang harus diambil lebih dahulu
   possibility_fN = possibility_fN.sort(function (a, b) {
-    return a.fN - b.fN || a.hN - b.hN || a.ruleDirection - b.ruleDirection;
+    return a.fN - b.fN || a.hN - b.hN;
   });
+
+  // hasil sorting kemudian dievaluasi, jika ada lebih dari 1 arah yang f(n) dan h(n) nya sama, maka dipilih secara random
+  let lowestFnHn_list = [];
+  let lowestFn = possibility_fN[0].fN;
+  let lowestHn = possibility_fN[0].hN
+  lowestFnHn_list.push(possibility_fN[0])
+  for(let i=1; i<possibility_fN.length; i++){
+    if(possibility_fN[i].fN===lowestFn && possibility_fN[i].hN === lowestHn)
+      lowestFnHn_list.push(possibility_fN[i])
+  }
+
+
+  let choosenIndex = 0;
+  // jika ditemukan lebih dari 1 kemungkinan yang f(n) dan h(n) nya sama, pilih angka random
+  if(lowestFnHn_list.length > 1){
+    choosenIndex = Math.floor(Math.random() * ((lowestFnHn_list.length-1) - 0 + 1) + 0);
+  }
+
+  // dan inilah arah yang terpilih
+  let choosenDirection = lowestFnHn_list[choosenIndex];
 
   // setelah di sort, indeks pertama pada possibility_fN otomatis adalah yang terpilih
   // lalu gerakkan block pada html
-  await moveBlock(possibility_fN[0].next_x, possibility_fN[0].next_y, matriks, x0, y0, possibility_fN[0].direction, withAnimation);
+  await moveBlock(choosenDirection.next_x, choosenDirection.next_y, matriks, x0, y0, choosenDirection.direction, withAnimation);
+  iteration.value++;
+  gN++;
 
-  await solve(matriks, matriks_tujuan, withAnimation, gN + 1, possibility_fN[0])
+  await solve(matriks, matriks_tujuan, withAnimation, iteration, gN, choosenDirection)
 
 }
 
@@ -124,7 +142,8 @@ export const getAllPossibilityMoves = (x0, y0, matriks, lastNode) => {
 
   if(x0 - 1 >= 0) // apakah block kosong bisa pindah ke atas?
     if(lastNode === null || (lastNode !== null && lastNode.direction !=='bawah'))
-      possibilityMoves.push('atas')
+      if(!(x0 - 1 === 0 && matriks.value[0][0] === 1 && matriks.value[0][1] === 2 && matriks.value[0][2] === 3)) // khusus ini, jika baris paling atas sudah 1, 2, dan 3, maka block kosong tidak bisa mengambil jalur ke baris pertama
+        possibilityMoves.push('atas')
 
   if(y0 + 1 <= matriks.value[x0].length - 1) // apakah block kosong bisa pindah ke kanan?
     if(lastNode === null || (lastNode !== null && lastNode.direction !=='kiri'))
@@ -137,23 +156,24 @@ export const getAllPossibilityMoves = (x0, y0, matriks, lastNode) => {
   return possibilityMoves;
 }
 
-// fungsi untuk menghitung h(n)
-export const counttMissPlacedBlock = (matriks, matriks_tujuan) => {
+
+// fungsi untuk menghitung manhattan distance
+export const manhattanDistance = (matriks, matriks_tujuan) => {
   let count = 0;
   for(let i=0; i<matriks.length; i++)
     for(let j=0; j<matriks[i].length; j++)
-      if(matriks[i][j] !== matriks_tujuan.value[i][j] && matriks[i][j] !== 0)
-        count++
+      if(matriks[i][j] !== matriks_tujuan.value[i][j] && matriks[i][j] !== 0){
+        // kalau tidak sama, berarti cek lokasi yang sebenarnya ada dimana dan hitung jaraknya
+        let currentValue = matriks[i][j];
+        for(let x=0; x<matriks_tujuan.value.length; x++)
+          for(let y=0; y<matriks_tujuan.value[x].length; y++)
+            if(currentValue === matriks_tujuan.value[x][y]){
+              // hitung jaraknya
+              count = count + (Math.abs(i - x) + Math.abs(j - y)) 
+            }
+      }
+        
   return count;
-}
-
-// untuk menerjemahkan prioritas arah searah jarum jam
-export const getRuleNumberOfDirection = (direction) =>{
-  if(direction==='atas') return 1
-  if(direction==='kanan') return 2
-  if(direction==='bawah') return 3
-  if(direction==='kiri') return 4
-  return 5;
 }
 
 // untuk menggerakkan block yang ada di htmlnya
