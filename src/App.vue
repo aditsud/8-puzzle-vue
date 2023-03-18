@@ -86,7 +86,7 @@
         <v-card-text class="bg-light-blue-lighten-5 ma-0 pa-2">
           <v-list density="compact" class="pa-0" nav>
             <v-list-item prepend-icon="mdi-github" title="Source Code" href="https://github.com/aditsud/8-puzzle-vue" target="_blank"></v-list-item>
-            <v-list-item prepend-icon="mdi-microsoft-powerpoint" title="Slide Presentation" href="https://eight-puzzle-solver.web.app/slide_presentasi.pdf" target="_blank"></v-list-item>
+            <v-list-item prepend-icon="mdi-microsoft-powerpoint" title="Slide Presentation" href="https://github.com/aditsud/8-puzzle-vue/raw/main/public/slide_presentasi.pdf" target="_blank"></v-list-item>
             <v-list-item prepend-icon="mdi-web" title="Demo Application" href="https://eight-puzzle-solver.web.app/" target="_blank"></v-list-item>
           </v-list>
         </v-card-text>
