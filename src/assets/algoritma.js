@@ -1,4 +1,4 @@
-export const solve = async (matriks, matriks_tujuan, withAnimation, iteration, gN = 0, lastNode = null) => { // menggunakan A*
+export const solve = async (matriks, matriks_tujuan, withAnimation, iteration, lastNode = null) => { 
   
   // cek, jika matriks awal sudah sama dengan matriks tujuan, maka berhenti
   if(JSON.stringify(matriks.value) === JSON.stringify(matriks_tujuan.value)){
@@ -24,12 +24,10 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, iteration, g
       temp_matriks[x0 + 1][y0] = 0; // menaruh block kosong pada indeks x,y
       
       // menghitung nilai h(n) atau jumlah block yang kosong pada saat block kosong dipindah ke bawah
-      let hN = manhattanDistance(temp_matriks, matriks_tujuan);
-      let fN = hN + gN;
+      let fN = manhattanDistance(temp_matriks, matriks_tujuan);
       possibility_fN.push({
         direction: possibilityMoves[i],
         fN: fN,
-        hN: hN,
         next_x: x0 + 1,
         next_y: y0
       })
@@ -39,12 +37,10 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, iteration, g
       temp_matriks[x0][y0] = value;
       temp_matriks[x0 - 1][y0] = 0; 
       
-      let hN = manhattanDistance(temp_matriks, matriks_tujuan);
-      let fN = hN + gN;
+      let fN = manhattanDistance(temp_matriks, matriks_tujuan);
       possibility_fN.push({
         direction: possibilityMoves[i],
         fN: fN,
-        hN: hN,
         next_x: x0 - 1,
         next_y: y0
       })
@@ -54,12 +50,10 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, iteration, g
       temp_matriks[x0][y0] = value;
       temp_matriks[x0][y0 + 1] = 0; 
       
-      let hN = manhattanDistance(temp_matriks, matriks_tujuan);
-      let fN = hN + gN;
+      let fN = manhattanDistance(temp_matriks, matriks_tujuan);
       possibility_fN.push({
         direction: possibilityMoves[i],
         fN: fN,
-        hN: hN,
         next_x: x0,
         next_y: y0 + 1
       })
@@ -69,12 +63,10 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, iteration, g
       temp_matriks[x0][y0] = value;
       temp_matriks[x0][y0 - 1] = 0; 
       
-      let hN = manhattanDistance(temp_matriks, matriks_tujuan);
-      let fN = hN + gN;
+      let fN = manhattanDistance(temp_matriks, matriks_tujuan);
       possibility_fN.push({
         direction: possibilityMoves[i],
         fN: fN,
-        hN: hN,
         next_x: x0,
         next_y: y0 - 1
       })
@@ -82,38 +74,38 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, iteration, g
   }
 
   // tentukan arah mana yang memiliki nilai fN terkecil
-  // sort possibility_fN berdasarkan fN terkecil, hN terkecil, dan rule arah yang harus diambil lebih dahulu
+  // sort possibility_fN berdasarkan fN terkecil
   possibility_fN = possibility_fN.sort(function (a, b) {
-    return a.fN - b.fN || a.hN - b.hN;
+    return a.fN - b.fN;
   });
 
-  // hasil sorting kemudian dievaluasi, jika ada lebih dari 1 arah yang f(n) dan h(n) nya sama, maka dipilih secara random
-  let lowestFnHn_list = [];
+  // hasil sorting kemudian dievaluasi, jika ada lebih dari 1 arah yang f(n) nya sama, maka opssibility moves tersebut dimasukkan ke dalam lowestFn_list
+  let lowestFn_list = [];
   let lowestFn = possibility_fN[0].fN;
-  let lowestHn = possibility_fN[0].hN
-  lowestFnHn_list.push(possibility_fN[0])
+  lowestFn_list.push(possibility_fN[0])
   for(let i=1; i<possibility_fN.length; i++){
-    if(possibility_fN[i].fN===lowestFn && possibility_fN[i].hN === lowestHn)
-      lowestFnHn_list.push(possibility_fN[i])
+    if(possibility_fN[i].fN===lowestFn)
+      lowestFn_list.push(possibility_fN[i])
   }
 
 
   let choosenIndex = 0;
   // jika ditemukan lebih dari 1 kemungkinan yang f(n) dan h(n) nya sama, pilih angka random
-  if(lowestFnHn_list.length > 1){
-    choosenIndex = Math.floor(Math.random() * ((lowestFnHn_list.length-1) - 0 + 1) + 0);
+  if(lowestFn_list.length > 1){
+    choosenIndex = Math.floor(Math.random() * ((lowestFn_list.length-1) - 0 + 1) + 0);
   }
 
+  // jika ditemukan lebih dari 1 kemungkinan yang f(n) dan h(n) nya sama, pilih angka random
+
   // dan inilah arah yang terpilih
-  let choosenDirection = lowestFnHn_list[choosenIndex];
+  let choosenDirection = lowestFn_list[choosenIndex];
 
   // setelah di sort, indeks pertama pada possibility_fN otomatis adalah yang terpilih
   // lalu gerakkan block pada html
   await moveBlock(choosenDirection.next_x, choosenDirection.next_y, matriks, x0, y0, choosenDirection.direction, withAnimation);
   iteration.value++;
-  gN++;
 
-  await solve(matriks, matriks_tujuan, withAnimation, iteration, gN, choosenDirection)
+  await solve(matriks, matriks_tujuan, withAnimation, iteration, choosenDirection)
 
 }
 

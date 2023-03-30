@@ -10,7 +10,7 @@ Proyek ini dikerjakan menggunakan bahasa pemrograman Javascript dengan tambahan 
 
 ## Slide Presentation
 
-Slide dapat diunduh pada https://github.com/aditsud/8-puzzle-vue/raw/main/public/slide_presentasi.pdf
+Slide dapat diunduh pada https://eight-puzzle-solver.web.app/slide_presentasi.pdf
 
 ## Demo Application (Online)
 
