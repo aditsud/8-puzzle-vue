@@ -12,8 +12,7 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, iteration, l
   let possibilityMoves = getAllPossibilityMoves(x0, y0, matriks, lastNode);
   
   // menghitung f(n): fungsi heuristik untuk tiap-tiap kemungkinan arah
-  // f(n) = h(n) + g(n) 
-  // h(n) adalah jumlah block yang salah tempat dan g(n) adalah jumlah pergerakan block kosong
+  // f(n) adalah jumlah block yang salah tempat 
   let possibility_fN = [];
   for(let i=0; i<possibilityMoves.length; i++){
     
@@ -23,7 +22,7 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, iteration, l
       temp_matriks[x0][y0] = value; // menaruh angka yang ada pada indeks x+1,y ke dalam indeks x0, y0
       temp_matriks[x0 + 1][y0] = 0; // menaruh block kosong pada indeks x,y
       
-      // menghitung nilai h(n) atau jumlah block yang kosong pada saat block kosong dipindah ke bawah
+      // menghitung nilai f(n) atau jumlah block yang kosong pada saat block kosong dipindah ke bawah
       let fN = manhattanDistance(temp_matriks, matriks_tujuan);
       possibility_fN.push({
         direction: possibilityMoves[i],
@@ -90,12 +89,12 @@ export const solve = async (matriks, matriks_tujuan, withAnimation, iteration, l
 
 
   let choosenIndex = 0;
-  // jika ditemukan lebih dari 1 kemungkinan yang f(n) dan h(n) nya sama, pilih angka random
+  // jika ditemukan lebih dari 1 kemungkinan yang f(n) nya sama, pilih angka random
   if(lowestFn_list.length > 1){
     choosenIndex = Math.floor(Math.random() * ((lowestFn_list.length-1) - 0 + 1) + 0);
   }
 
-  // jika ditemukan lebih dari 1 kemungkinan yang f(n) dan h(n) nya sama, pilih angka random
+  // jika ditemukan lebih dari 1 kemungkinan yang f(n)  nya sama, pilih angka random
 
   // dan inilah arah yang terpilih
   let choosenDirection = lowestFn_list[choosenIndex];
